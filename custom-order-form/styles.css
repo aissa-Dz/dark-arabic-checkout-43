@@ -15,14 +15,14 @@ body {
 }
 
 .custom-order-form-container {
-    max-width: 500px;
-    margin: 1rem auto;
-    padding: 0 1rem;
+    max-width: 600px; /* زيادة العرض الأقصى */
+    margin: 0.5rem auto; /* تقليل الهامش العلوي والسفلي */
+    padding: 0 0.5rem; /* تقليل الهوامش الجانبية */
 }
 
 .custom-order-form {
     background: var(--background-color);
-    padding: 1.5rem;
+    padding: 1rem; /* تقليل الحشو الداخلي */
     border-radius: var(--border-radius);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
