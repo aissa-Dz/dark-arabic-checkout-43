@@ -1,0 +1,77 @@
+.settings-container {
+    @apply max-w-4xl mx-auto p-6;
+}
+
+.settings-tabs {
+    @apply flex gap-2 mb-6 border-b;
+}
+
+.settings-tab {
+    @apply px-4 py-2 text-gray-600 hover:text-primary cursor-pointer transition-colors;
+}
+
+.settings-tab.active {
+    @apply text-primary border-b-2 border-primary;
+}
+
+.settings-panel {
+    @apply bg-white rounded-lg shadow-sm p-6;
+}
+
+.field-toggle {
+    @apply flex items-center justify-between p-3 bg-gray-50 rounded;
+}
+
+.switch {
+    @apply relative inline-block w-12 h-6;
+}
+
+.switch input {
+    @apply opacity-0 w-0 h-0;
+}
+
+.slider {
+    @apply absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-gray-300 transition-all rounded-full;
+}
+
+.slider:before {
+    @apply absolute h-5 w-5 left-0.5 bottom-0.5 bg-white transition-all rounded-full;
+    content: "";
+}
+
+input:checked + .slider {
+    @apply bg-primary;
+}
+
+input:checked + .slider:before {
+    @apply transform translate-x-6;
+}
+
+.color-picker-wrapper {
+    @apply flex items-center justify-between p-3 bg-gray-50 rounded;
+}
+
+.color-picker {
+    @apply w-12 h-8 rounded cursor-pointer border-none;
+}
+
+.custom-field-row {
+    @apply flex items-center gap-2 mt-2 animate-fade-in;
+}
+
+.preview-container {
+    @apply mt-6 border rounded-lg p-4 bg-gray-50;
+}
+
+.preview-frame {
+    @apply w-full min-h-[500px] border-0 rounded;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
