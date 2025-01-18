@@ -227,7 +227,8 @@ class Custom_Order_Form_Admin {
                 'fieldVisibility' => get_option('custom_order_form_field_visibility', array(
                     'show_address' => true,
                     'show_state' => true,
-                    'show_municipality' => true
+                    'show_municipality' => true,
+                    'show_country' => false // إضافة خيار حقل الدولة
                 )),
                 'shipping' => get_option('custom_order_form_shipping_settings', array(
                     'fixed_price' => 0,
@@ -258,7 +259,8 @@ class Custom_Order_Form_Admin {
         $field_visibility = get_option('custom_order_form_field_visibility', array(
             'show_address' => true,
             'show_state' => true,
-            'show_municipality' => true
+            'show_municipality' => true,
+            'show_country' => false // إضافة خيار حقل الدولة
         ));
 
         $shipping_settings = get_option('custom_order_form_shipping_settings', array(
@@ -551,6 +553,13 @@ class Custom_Order_Form_Admin {
                     <h2>إظهار/إخفاء الحقول</h2>
                     <div class="form-group">
                         <label>
+                            <input type="checkbox" name="field_visibility[show_country]" 
+                                   <?php checked($field_visibility['show_country'], true); ?>>
+                            تفعيل حقل الدولة
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
                             <input type="checkbox" name="field_visibility[show_address]" 
                                    <?php checked($field_visibility['show_address'], true); ?>>
                             إظهار حقل العنوان
@@ -667,7 +676,8 @@ class Custom_Order_Form_Admin {
         $field_visibility = isset($_POST['field_visibility']) ? array(
             'show_address' => isset($_POST['field_visibility']['show_address']),
             'show_state' => isset($_POST['field_visibility']['show_state']),
-            'show_municipality' => isset($_POST['field_visibility']['show_municipality'])
+            'show_municipality' => isset($_POST['field_visibility']['show_municipality']),
+            'show_country' => isset($_POST['field_visibility']['show_country']) // إضافة خيار حقل الدولة
         ) : array();
         
         $whatsapp_settings = isset($_POST['whatsapp_settings']) ? array(

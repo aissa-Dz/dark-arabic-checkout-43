@@ -3,7 +3,8 @@
 $field_visibility = get_option('custom_order_form_field_visibility', array(
     'show_address' => true,
     'show_state' => true,
-    'show_municipality' => true
+    'show_municipality' => true,
+    'show_country' => false
 ));
 
 $whatsapp_settings = get_option('custom_order_form_whatsapp_settings', array(
@@ -115,6 +116,35 @@ if ($spam_settings['limit_orders']) {
             </div>
         </div>
 
+        <?php if ($field_visibility['show_country']): ?>
+        <div class="form-group">
+            <div class="input-group">
+                <input type="text" 
+                       id="country" 
+                       name="country" 
+                       class="form-control" 
+                       placeholder="الدولة"
+                       required>
+                <span class="input-group-text">
+                    <i class="fas fa-globe"></i>
+                </span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="input-group">
+                <input type="text" 
+                       id="city" 
+                       name="city" 
+                       class="form-control" 
+                       placeholder="المدينة"
+                       required>
+                <span class="input-group-text">
+                    <i class="fas fa-city"></i>
+                </span>
+            </div>
+        </div>
+        <?php else: ?>
         <?php if (isset($field_visibility['show_state']) && $field_visibility['show_state']): ?>
         <div class="form-group">
             <div class="input-group">
@@ -156,63 +186,6 @@ if ($spam_settings['limit_orders']) {
             </div>
         </div>
         <?php endif; ?>
-
-        <?php if ($has_variations): ?>
-        <div class="variations-group">
-            <label>خيارات المنتج:</label>
-            <?php foreach ($variations as $attribute_name => $options): 
-                $attribute_id = 'attribute_' . sanitize_title($attribute_name);
-                $is_color = (strpos(strtolower($attribute_name), 'color') !== false || 
-                           strpos(strtolower($attribute_name), 'colour') !== false || 
-                           strpos(strtolower($attribute_name), 'لون') !== false);
-            ?>
-            <div class="form-group variation-group">
-                <label><?php echo wc_attribute_label($attribute_name); ?></label>
-                <div class="variation-options">
-                    <input type="hidden" name="<?php echo esc_attr($attribute_id); ?>" class="variation-select" required>
-                    <?php foreach ($options as $option): 
-                        $option_id = $attribute_id . '_' . sanitize_title($option);
-                        if ($is_color):
-                            // محاولة الحصول على قيمة اللون
-                            $color = $option;
-                            // تحويل الأسماء العربية إلى ألوان
-                            $color_map = [
-                                'أحمر' => '#ff0000',
-                                'أخضر' => '#00ff00',
-                                'أزرق' => '#0000ff',
-                                'أسود' => '#000000',
-                                'أبيض' => '#ffffff',
-                                'أصفر' => '#ffff00',
-                                'برتقالي' => '#ffa500',
-                                'بني' => '#a52a2a',
-                                'رمادي' => '#808080',
-                                'ذهبي' => '#ffd700',
-                                'فضي' => '#c0c0c0',
-                                'وردي' => '#ffc0cb',
-                                'بنفسجي' => '#800080'
-                            ];
-                            if (isset($color_map[$option])) {
-                                $color = $color_map[$option];
-                            }
-                    ?>
-                        <div class="swatch-option color-swatch" 
-                             data-value="<?php echo esc_attr($option); ?>"
-                             data-attribute="<?php echo esc_attr($attribute_id); ?>"
-                             style="background-color: <?php echo esc_attr($color); ?>">
-                            <span class="swatch-label"><?php echo esc_html($option); ?></span>
-                        </div>
-                    <?php else: ?>
-                        <div class="swatch-option text-swatch" 
-                             data-value="<?php echo esc_attr($option); ?>"
-                             data-attribute="<?php echo esc_attr($attribute_id); ?>">
-                            <?php echo esc_html($option); ?>
-                        </div>
-                    <?php endif; ?>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-            <?php endforeach; ?>
-        </div>
         <?php endif; ?>
 
         <div class="form-group" id="addressGroup" style="<?php echo (!isset($field_visibility['show_address']) || !$field_visibility['show_address']) ? 'display: none;' : ''; ?>">
@@ -310,5 +283,45 @@ if ($spam_settings['limit_orders']) {
         <input type="hidden" id="variableProduct" value="<?php echo $product->is_type('variable') ? '1' : '0'; ?>">
         <input type="hidden" id="hasVariations" value="<?php echo $has_variations ? '1' : '0'; ?>">
         <input type="hidden" id="productName" value="<?php echo esc_attr(get_the_title()); ?>">
+        <div id="paypal-button-container"></div>
     </form>
 </div>
+
+<script src="https://www.paypal.com/sdk/js?client-id=YOUR_PAYPAL_CLIENT_ID&currency=USD"></script>
+<script>
+paypal.Buttons({
+    createOrder: function(data, actions) {
+        // جمع بيانات النموذج
+        const formData = new FormData(document.getElementById('orderForm'));
+        const total = document.getElementById('totalPrice').textContent.replace(/[^\d.]/g, '');
+        
+        return actions.order.create({
+            purchase_units: [{
+                amount: {
+                    value: total
+                }
+            }]
+        });
+    },
+    onApprove: function(data, actions) {
+        return actions.order.capture().then(function(details) {
+            // إرسال الطلب إلى ووكومرس
+            const formData = new FormData(document.getElementById('orderForm'));
+            formData.append('action', 'place_custom_order');
+            formData.append('payment_method', 'paypal');
+            formData.append('payment_id', details.id);
+            
+            fetch(woocommerce_params.ajax_url, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data.redirect_url) {
+                    window.location.href = data.data.redirect_url;
+                }
+            });
+        });
+    }
+}).render('#paypal-button-container');
+</script>
