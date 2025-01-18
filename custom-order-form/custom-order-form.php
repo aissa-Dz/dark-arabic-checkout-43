@@ -280,6 +280,7 @@ add_action('wp_ajax_check_customer_block', 'check_customer_block');
 add_action('wp_ajax_nopriv_check_customer_block', 'check_customer_block');
 
 add_action('wp_ajax_place_custom_order', 'place_custom_order');
+add_action('wp_ajax_nopriv_place_custom_order', 'place_custom_order');
 
 function add_custom_order_form() {
     if (is_product()) {
@@ -365,8 +366,7 @@ function custom_order_form_assets() {
     $field_visibility = get_option('custom_order_form_field_visibility', array(
         'show_address' => true,
         'show_state' => true,
-        'show_municipality' => true,
-        'show_country' => false
+        'show_municipality' => true
     ));
 
     $shipping_settings = get_option('custom_order_form_shipping_settings', array(
@@ -420,4 +420,3 @@ function custom_order_form_assets() {
     wp_add_inline_style('custom-order-form-styles', $custom_css);
 }
 add_action('wp_enqueue_scripts', 'custom_order_form_assets');
-

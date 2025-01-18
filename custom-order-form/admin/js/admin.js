@@ -1,188 +1,216 @@
-document.addEventListener('DOMContentLoaded', function() {
-    initializeColorPickers();
-    initializeFieldToggles();
-    initializeCustomFields();
-    setupLivePreview();
-});
+jQuery(document).ready(function($) {
+    // تهيئة منتقي الألوان
+    $('.color-picker').wpColorPicker();
 
-function initializeColorPickers() {
-    const colorPickers = document.querySelectorAll('.color-picker');
-    colorPickers.forEach(picker => {
-        picker.addEventListener('change', function() {
-            updatePreview();
-        });
-    });
-}
-
-function initializeFieldToggles() {
-    const toggles = document.querySelectorAll('.field-toggle-input');
-    toggles.forEach(toggle => {
-        toggle.addEventListener('change', function() {
-            updatePreview();
-        });
-    });
-}
-
-function initializeCustomFields() {
-    let customFieldCount = 0;
-    
-    document.getElementById('add-custom-field')?.addEventListener('click', function() {
-        customFieldCount++;
-        const fieldHtml = `
-            <div class="custom-field-row flex items-center gap-2 mt-2">
-                <input type="text" 
-                       placeholder="اسم الحقل" 
-                       class="flex-1 p-2 border rounded"
-                       name="custom_fields[${customFieldCount}][label]">
-                <select name="custom_fields[${customFieldCount}][type]"
-                        class="p-2 border rounded">
-                    <option value="text">نص</option>
-                    <option value="number">رقم</option>
-                    <option value="select">قائمة منسدلة</option>
-                </select>
-                <button type="button" 
-                        class="remove-field px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600">
-                    حذف
-                </button>
-            </div>
-        `;
-        
-        document.getElementById('custom-fields-container').insertAdjacentHTML('beforeend', fieldHtml);
-    });
-
-    document.addEventListener('click', function(e) {
-        if (e.target.matches('.remove-field')) {
-            e.target.closest('.custom-field-row').remove();
-            updatePreview();
+    // تحديث إعدادات الشحن
+    $('input[name="field_visibility[show_state]"]').on('change', function() {
+        const fixedShippingField = $('.fixed-shipping-price');
+        if (!$(this).is(':checked')) {
+            fixedShippingField.slideDown();
+        } else {
+            fixedShippingField.slideUp();
         }
     });
-}
 
-function setupLivePreview() {
-    const previewFrame = document.getElementById('form-preview-frame');
-    if (!previewFrame) return;
-
-    const updatePreview = _.debounce(function() {
-        const settings = collectCurrentSettings();
+    // تحديث الإعدادات
+    $('#custom-order-form-settings').on('submit', function(e) {
+        e.preventDefault();
         
-        // تحديث المعاينة عبر postMessage
-        previewFrame.contentWindow.postMessage({
-            type: 'update-form-settings',
-            settings: settings
-        }, '*');
-    }, 300);
+        const formData = new FormData(this);
+        formData.append('action', 'save_form_settings');
+        formData.append('nonce', customOrderFormAdmin.nonce);
 
-    // إضافة مستمعي الأحداث لجميع عناصر التحكم
-    document.querySelectorAll('input, select, textarea').forEach(element => {
-        element.addEventListener('change', updatePreview);
-        element.addEventListener('input', updatePreview);
-    });
-}
+        const submitButton = $(this).find('button[type="submit"]');
+        submitButton.prop('disabled', true);
 
-function collectCurrentSettings() {
-    return {
-        fields: getFieldSettings(),
-        styles: getStyleSettings(),
-        customFields: getCustomFieldSettings()
-    };
-}
-
-function getFieldSettings() {
-    const fields = {};
-    document.querySelectorAll('.field-toggle-input').forEach(toggle => {
-        fields[toggle.name] = toggle.checked;
-    });
-    return fields;
-}
-
-function getStyleSettings() {
-    const styles = {};
-    document.querySelectorAll('.color-picker').forEach(picker => {
-        styles[picker.name] = picker.value;
-    });
-    styles.fontFamily = document.querySelector('select[name="font_family"]').value;
-    return styles;
-}
-
-function getCustomFieldSettings() {
-    const customFields = [];
-    document.querySelectorAll('.custom-field-row').forEach(row => {
-        customFields.push({
-            label: row.querySelector('input[type="text"]').value,
-            type: row.querySelector('select').value
+        $.ajax({
+            url: customOrderFormAdmin.ajaxUrl,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    showMessage('success', response.data.message);
+                }
+            },
+            error: function() {
+                showMessage('error', 'حدث خطأ أثناء حفظ الإعدادات');
+            },
+            complete: function() {
+                submitButton.prop('disabled', false);
+            }
         });
     });
-    return customFields;
-}
 
-// Add color settings handlers
-jQuery(document).ready(function($) {
-    // Add new color
-    $('.add-color').on('click', function() {
-        const name = $('#new-color-name').val();
-        const value = $('#new-color-value').val();
+    // حذف الطلب المتروك
+    $('.delete-abandoned-order').on('click', function() {
+        const button = $(this);
+        const orderId = button.data('id');
         
-        if (!name || !value) {
-            alert('الرجاء إدخال اسم اللون وقيمته');
+        if (confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
+            $.ajax({
+                url: customOrderFormAdmin.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'delete_abandoned_order',
+                    nonce: customOrderFormAdmin.nonce,
+                    order_id: orderId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        button.closest('tr').fadeOut(function() {
+                            $(this).remove();
+                            if ($('.abandoned-orders tbody tr').length === 0) {
+                                $('.abandoned-orders table').replaceWith('<p>لا توجد طلبات متروكة حالياً.</p>');
+                            }
+                        });
+                        showMessage('success', 'تم حذف الطلب بنجاح');
+                    }
+                },
+                error: function() {
+                    showMessage('error', 'حدث خطأ أثناء حذف الطلب');
+                }
+            });
+        }
+    });
+
+    // إضافة حظر جديد
+    $('.add-block-button').on('click', function() {
+        const type = $('#blockType').val();
+        const value = $('#blockValue').val().trim();
+        const reason = $('#blockReason').val().trim();
+
+        if (!value) {
+            showMessage('error', 'يرجى إدخال قيمة للحظر');
             return;
         }
 
-        const row = `
-            <tr>
-                <td>${name}</td>
-                <td>
-                    <input type="color" value="${value}" 
-                           data-color-name="${name}" 
-                           class="color-picker">
-                </td>
-                <td>
-                    <button type="button" class="button delete-color" 
-                            data-color-name="${name}">
-                        حذف
-                    </button>
-                </td>
-            </tr>
-        `;
-        
-        $('#custom-colors').append(row);
-        $('#new-color-name').val('');
-        $('#new-color-value').val('#000000');
-        
-        saveColors();
-    });
-
-    // Delete color
-    $(document).on('click', '.delete-color', function() {
-        $(this).closest('tr').remove();
-        saveColors();
-    });
-
-    // Save colors when changed
-    $(document).on('change', '#custom-colors .color-picker', function() {
-        saveColors();
-    });
-
-    function saveColors() {
-        const colors = {};
-        $('#custom-colors tr').each(function() {
-            const name = $(this).find('.color-picker').data('color-name');
-            const value = $(this).find('.color-picker').val();
-            colors[name] = value;
-        });
+        // التحقق من صحة القيمة
+        if (type === 'ip' && !isValidIP(value)) {
+            showMessage('error', 'عنوان IP غير صالح');
+            return;
+        } else if (type === 'phone' && !isValidPhone(value)) {
+            showMessage('error', 'رقم الهاتف غير صالح');
+            return;
+        }
 
         $.ajax({
-            url: ajaxurl,
+            url: customOrderFormAdmin.ajaxUrl,
             type: 'POST',
             data: {
-                action: 'save_color_settings',
+                action: 'add_block_item',
                 nonce: customOrderFormAdmin.nonce,
-                colors: colors
+                type: type,
+                value: value,
+                reason: reason
             },
             success: function(response) {
                 if (response.success) {
-                    // Optional: Show success message
+                    location.reload(); // تحديث الصفحة لعرض العنصر المحظور الجديد
                 }
+            },
+            error: function() {
+                showMessage('error', 'حدث خطأ أثناء إضافة الحظر');
             }
         });
+    });
+
+    // إلغاء الحظر
+    $('.remove-block-button').on('click', function() {
+        const button = $(this);
+        const type = button.data('type');
+        const value = button.data('value');
+
+        if (confirm('هل أنت متأكد من إلغاء هذا الحظر؟')) {
+            $.ajax({
+                url: customOrderFormAdmin.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'remove_block_item',
+                    nonce: customOrderFormAdmin.nonce,
+                    type: type,
+                    value: value
+                },
+                success: function(response) {
+                    if (response.success) {
+                        button.closest('tr').fadeOut(function() {
+                            $(this).remove();
+                            if ($('.blocked-list tbody tr').length === 0) {
+                                $('.blocked-list table').replaceWith('<p>لا توجد عناصر محظورة حالياً.</p>');
+                            }
+                        });
+                        showMessage('success', 'تم إلغاء الحظر بنجاح');
+                    }
+                },
+                error: function() {
+                    showMessage('error', 'حدث خطأ أثناء إلغاء الحظر');
+                }
+            });
+        }
+    });
+
+    // التحقق من صحة عنوان IP
+    function isValidIP(ip) {
+        const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+        if (!ipRegex.test(ip)) return false;
+        const parts = ip.split('.');
+        return parts.every(part => parseInt(part) >= 0 && parseInt(part) <= 255);
+    }
+
+    // التحقق من صحة رقم الهاتف
+    function isValidPhone(phone) {
+        // يمكن تعديل هذا النمط حسب تنسيق أرقام الهواتف المطلوب
+        return /^\d{8,15}$/.test(phone.replace(/[\s\-\+]/g, ''));
+    }
+
+    // تبديل علامات التبويب
+    $('.settings-tab').on('click', function() {
+        const tabId = $(this).data('tab');
+        
+        $('.settings-tab').removeClass('active');
+        $(this).addClass('active');
+        
+        $('.settings-panel').removeClass('active');
+        $('#' + tabId + '-panel').addClass('active');
+
+        // تحديث URL مع التبويب النشط
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('tab', tabId);
+        window.history.replaceState({}, '', `${window.location.pathname}?${urlParams}`);
+    });
+
+    // تحريك زر الحفظ إلى الأسفل عند التمرير
+    const saveButton = $('.button.button-primary');
+    const originalPosition = saveButton.offset()?.top;
+
+    if (originalPosition) {
+        $(window).on('scroll', function() {
+            const scrollPosition = $(window).scrollTop();
+            if (scrollPosition > originalPosition) {
+                saveButton.addClass('sticky-save');
+            } else {
+                saveButton.removeClass('sticky-save');
+            }
+        });
+    }
+
+    // عرض رسائل النجاح والخطأ
+    function showMessage(type, message) {
+        const notice = $(`<div class="orders-message ${type}"><p>${message}</p></div>`);
+        $('.wrap.custom-order-form-settings h1').after(notice);
+        
+        setTimeout(function() {
+            notice.fadeOut(function() {
+                $(this).remove();
+            });
+        }, 3000);
+    }
+
+    // تحديد التبويب النشط من URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeTab = urlParams.get('tab');
+    if (activeTab) {
+        $(`.settings-tab[data-tab="${activeTab}"]`).click();
     }
 });
