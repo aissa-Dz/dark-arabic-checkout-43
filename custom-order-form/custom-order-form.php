@@ -31,22 +31,44 @@ function custom_order_form_shortcode($atts = array()) {
         return '<p>المنتج غير موجود</p>';
     }
 
+    // حفظ الحالة الحالية
+    $original_post = $GLOBALS['post'];
+    $original_product = $GLOBALS['product'];
+    
+    // تعيين المنتج المطلوب
+    $GLOBALS['post'] = get_post($atts['product_id']);
+    $GLOBALS['product'] = $product;
+    setup_postdata($GLOBALS['post']);
+
+    // تهيئة المتغيرات اللازمة لعرض النموذج
+    $has_variations = $product->is_type('variable');
+    $variations = array();
+    if ($has_variations) {
+        $attributes = $product->get_variation_attributes();
+        foreach ($attributes as $attribute => $values) {
+            $variations[$attribute] = $values;
+        }
+    }
+
     ob_start();
     custom_order_form_assets();
     
-    // تخزين معرف المنتج الحالي
-    $current_product_id = get_the_ID();
-    // تعيين معرف المنتج المطلوب مؤقتاً
-    global $post;
-    $post = get_post($atts['product_id']);
-    setup_postdata($post);
+    // إضافة div لمحاكاة بيئة صفحة المنتج
+    echo '<div class="woocommerce single-product">';
+    echo '<div id="product-' . $atts['product_id'] . '" class="' . implode(' ', wc_get_product_class('', $product)) . '">';
+    echo '<div class="summary entry-summary">';
     
-    add_custom_order_form();
+    include 'order-form-template.php';
     
-    // إعادة تعيين المنتج الأصلي
-    if ($current_product_id) {
-        $post = get_post($current_product_id);
-        setup_postdata($post);
+    echo '</div>';
+    echo '</div>';
+    echo '</div>';
+    
+    // استعادة الحالة الأصلية
+    $GLOBALS['post'] = $original_post;
+    $GLOBALS['product'] = $original_product;
+    if ($original_post) {
+        setup_postdata($original_post);
     }
     
     return ob_get_clean();
