@@ -1,228 +1,91 @@
 :root {
-    --primary-color: #8A2BE2;
-    --button-color: linear-gradient(45deg, #FF4B2B, #FF416C);
-    --text-color: #1A1F2C;
-    --background-color: #FFF8F0;
-    --border-color: #E5E7EB;
-    --border-radius: 12px;
-    --font-family: 'Noto Kufi Arabic', sans-serif;
+    --primary-color: #3b82f6;
+    --button-color: #3b82f6;
+    --text-color: #1f2937;
+    --background-color: #ffffff;
+    --border-color: #e5e7eb;
+    --border-radius: 8px;
+    --font-family: 'IBM Plex Sans Arabic', sans-serif;
+}
+
+body {
+    font-family: var(--font-family);
+    color: var(--text-color);
+    background-color: #f3f4f6;
 }
 
 .custom-order-form-container {
-    max-width: 100%;
-    margin: 0;
-    padding: 0.5rem;
-    background: var(--background-color);
-    font-family: var(--font-family);
+    max-width: 600px; /* زيادة العرض الأقصى */
+    margin: 0.5rem auto; /* تقليل الهامش العلوي والسفلي */
+    padding: 0 0.5rem; /* تقليل الهوامش الجانبية */
 }
 
 .custom-order-form {
-    background: #ffffff;
-    padding: 1.5rem;
+    background: var(--background-color);
+    padding: 1rem; /* تقليل الحشو الداخلي */
     border-radius: var(--border-radius);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.custom-order-form h2 {
+    color: var(--text-color);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    text-align: right;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.custom-order-form h2 i {
+    color: var(--primary-color);
 }
 
 .form-group {
     margin-bottom: 1rem;
 }
 
-.input-group {
-    position: relative;
-    margin-bottom: 1.25rem;
-}
-
-.input-group input,
-.input-group select {
+.form-control, .form-select {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 0.75rem;
     width: 100%;
-    padding: 1rem;
-    padding-right: 2.5rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    font-size: 1rem;
-    background: #ffffff;
-    transition: all 0.2s;
+    font-size: 0.95rem;
+    background-color: #fff;
 }
 
-.input-group i {
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #9CA3AF;
-}
-
-.quantity-section {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin: 1.5rem 0;
-    padding: 1rem;
-    background: #F9FAFB;
-    border-radius: var(--border-radius);
-}
-
-.quantity-label {
-    font-weight: 500;
-    color: var(--text-color);
-}
-
-.quantity-controls {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: #ffffff;
-    padding: 0.25rem;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-}
-
-.quantity-controls button {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #F3F4F6;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1.25rem;
-    color: var(--text-color);
-}
-
-.quantity-controls input {
-    width: 40px;
-    text-align: center;
-    border: none;
-    font-size: 1rem;
-    padding: 0;
-    background: transparent;
-}
-
-.delivery-section {
-    margin: 2rem 0;
-}
-
-.delivery-section h3 {
-    font-size: 1.1rem;
-    color: var(--text-color);
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.delivery-section h3 i {
-    color: #FF4B2B;
-}
-
-.delivery-options {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.delivery-option {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem;
-    background: #ffffff;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.delivery-option.selected {
+.form-control:focus, .form-select:focus {
+    outline: none;
     border-color: var(--primary-color);
-    background: #F9F5FF;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
-.delivery-option-price {
-    font-weight: 500;
-    color: var(--primary-color);
-}
-
-.total-section {
-    margin: 2rem 0;
-    padding: 1rem;
-    background: #F9F5FF;
-    border-radius: var(--border-radius);
+.input-group {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-}
-
-.total-label {
-    font-weight: 500;
-    color: var(--text-color);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.total-amount {
-    font-weight: 600;
-    color: var(--primary-color);
-    font-size: 1.1rem;
-}
-
-.submit-button {
-    width: 100%;
-    padding: 1rem;
-    border: none;
+    background: #fff;
+    border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
-    background: var(--button-color);
-    color: white;
-    font-weight: 500;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: all 0.3s;
-    margin-top: 1rem;
+    overflow: hidden;
 }
 
-.submit-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 75, 43, 0.2);
-}
-
-.whatsapp-button {
-    width: 100%;
-    padding: 1rem;
+.input-group .form-control,
+.input-group .form-select {
     border: none;
-    border-radius: var(--border-radius);
-    background: #25D366;
-    color: white;
-    font-weight: 500;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: all 0.3s;
-    margin-top: 1rem;
+    border-radius: 0;
+    flex: 1;
+}
+
+.input-group-text {
+    padding: 0.75rem;
+    background-color: #f9fafb;
+    border-left: 1px solid var(--border-color);
+    color: #6b7280;
+    width: 42px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-}
-
-.step-number {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: #FF4B2B;
-    font-weight: 500;
-    margin-bottom: 1rem;
-}
-
-@media (max-width: 768px) {
-    .custom-order-form {
-        padding: 1rem;
-    }
-    
-    .delivery-option {
-        padding: 0.75rem;
-    }
 }
 
 .variations-group {
@@ -623,4 +486,3 @@
         width: 100%;
     }
 }
-
