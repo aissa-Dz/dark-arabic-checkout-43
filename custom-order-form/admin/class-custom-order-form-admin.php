@@ -14,6 +14,7 @@ class Custom_Order_Form_Admin {
         add_action('wp_ajax_add_block_item', array($this, 'add_block_item'));
         add_action('wp_ajax_remove_block_item', array($this, 'remove_block_item'));
         add_action('wp_ajax_nopriv_check_customer_block', array($this, 'check_customer_block'));
+        add_action('wp_ajax_save_color_settings', array($this, 'save_color_settings'));
     }
 
     public function add_block_item() {
@@ -610,25 +611,47 @@ class Custom_Order_Form_Admin {
 
                 <div class="settings-panel" id="design-panel">
                     <h2>إعدادات التصميم</h2>
-                    <div class="form-group">
-                        <label>اللون الرئيسي</label>
-                        <input type="color" name="design[primaryColor]" 
-                               value="<?php echo esc_attr($design_settings['primaryColor']); ?>" class="color-picker">
-                    </div>
-                    <div class="form-group">
-                        <label>لون الأزرار</label>
-                        <input type="color" name="design[buttonColor]" 
-                               value="<?php echo esc_attr($design_settings['buttonColor']); ?>" class="color-picker">
-                    </div>
-                    <div class="form-group">
-                        <label>نوع الخط</label>
-                        <select name="design[fontFamily]">
-                            <option value="IBM Plex Sans Arabic" <?php selected($design_settings['fontFamily'], 'IBM Plex Sans Arabic'); ?>>IBM Plex Sans Arabic</option>
-                            <option value="Tajawal" <?php selected($design_settings['fontFamily'], 'Tajawal'); ?>>Tajawal</option>
-                            <option value="Cairo" <?php selected($design_settings['fontFamily'], 'Cairo'); ?>>Cairo</option>
-                        </select>
-                    </div>
                     
+                    <h3>إعدادات الألوان المخصصة</h3>
+                    <div class="color-settings">
+                        <table class="wp-list-table widefat fixed striped">
+                            <thead>
+                                <tr>
+                                    <th>اسم اللون</th>
+                                    <th>قيمة اللون</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="custom-colors">
+                                <?php
+                                $color_settings = get_option('custom_order_form_color_settings', array());
+                                foreach ($color_settings as $name => $value): ?>
+                                <tr>
+                                    <td><?php echo esc_html($name); ?></td>
+                                    <td>
+                                        <input type="color" value="<?php echo esc_attr($value); ?>" 
+                                               data-color-name="<?php echo esc_attr($name); ?>" 
+                                               class="color-picker">
+                                    </td>
+                                    <td>
+                                        <button type="button" class="button delete-color" 
+                                                data-color-name="<?php echo esc_attr($name); ?>">
+                                            حذف
+                                        </button>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                        
+                        <div class="add-color-form">
+                            <h4>إضافة لون جديد</h4>
+                            <input type="text" id="new-color-name" placeholder="اسم اللون" class="regular-text">
+                            <input type="color" id="new-color-value" class="color-picker">
+                            <button type="button" class="button add-color">إضافة لون</button>
+                        </div>
+                    </div>
+
                     <h2>تنسيق النموذج</h2>
                     <div class="form-group">
                         <label>لون الخلفية</label>
@@ -721,5 +744,18 @@ class Custom_Order_Form_Admin {
                 'design' => $design_settings
             )
         ));
+    }
+
+    public function save_color_settings() {
+        check_ajax_referer('custom_order_form_admin_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('غير مصرح لك بتنفيذ هذا الإجراء');
+            return;
+        }
+
+        $colors = isset($_POST['colors']) ? $_POST['colors'] : array();
+        update_option('custom_order_form_color_settings', $colors);
+        wp_send_json_success('تم حفظ إعدادات الألوان بنجاح');
     }
 }

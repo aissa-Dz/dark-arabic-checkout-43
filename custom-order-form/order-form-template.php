@@ -1,4 +1,3 @@
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <?php
 $field_visibility = get_option('custom_order_form_field_visibility', array(
     'show_address' => true,
@@ -69,6 +68,64 @@ if ($spam_settings['limit_orders']) {
             <i class="fas fa-shopping-cart"></i>
             <?php echo esc_html(get_option('custom_order_form_title', 'أضف معلوماتك في الأسفل لطلب هذا المنتج')); ?>
         </h2>
+
+        <?php if ($has_variations): ?>
+        <div class="variations-group">
+            <label>خيارات المنتج:</label>
+            <?php foreach ($variations as $attribute_name => $options): 
+                $attribute_id = 'attribute_' . sanitize_title($attribute_name);
+                $is_color = (strpos(strtolower($attribute_name), 'color') !== false || 
+                           strpos(strtolower($attribute_name), 'colour') !== false || 
+                           strpos(strtolower($attribute_name), 'لون') !== false);
+            ?>
+            <div class="form-group variation-group">
+                <label><?php echo wc_attribute_label($attribute_name); ?></label>
+                <div class="variation-options">
+                    <input type="hidden" name="<?php echo esc_attr($attribute_id); ?>" class="variation-select" required>
+                    <?php foreach ($options as $option): 
+                        $option_id = $attribute_id . '_' . sanitize_title($option);
+                        if ($is_color):
+                            $color_settings = get_option('custom_order_form_color_settings', array());
+                            $color = $option;
+                            $color_map = array_merge([
+                                'أحمر' => '#ff0000',
+                                'أخضر' => '#00ff00',
+                                'أزرق' => '#0000ff',
+                                'أسود' => '#000000',
+                                'أبيض' => '#ffffff',
+                                'أصفر' => '#ffff00',
+                                'برتقالي' => '#ffa500',
+                                'بني' => '#a52a2a',
+                                'رمادي' => '#808080',
+                                'ذهبي' => '#ffd700',
+                                'فضي' => '#c0c0c0',
+                                'وردي' => '#ffc0cb',
+                                'بنفسجي' => '#800080'
+                            ], $color_settings);
+                            
+                            if (isset($color_map[$option])) {
+                                $color = $color_map[$option];
+                            }
+                    ?>
+                        <div class="swatch-option color-swatch" 
+                             data-value="<?php echo esc_attr($option); ?>"
+                             data-attribute="<?php echo esc_attr($attribute_id); ?>"
+                             style="background-color: <?php echo esc_attr($color); ?>">
+                            <span class="swatch-label"><?php echo esc_html($option); ?></span>
+                        </div>
+                    <?php else: ?>
+                        <div class="swatch-option text-swatch" 
+                             data-value="<?php echo esc_attr($option); ?>"
+                             data-attribute="<?php echo esc_attr($attribute_id); ?>">
+                            <?php echo esc_html($option); ?>
+                        </div>
+                    <?php endif; ?>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
 
         <div class="form-group">
             <div class="input-group">
