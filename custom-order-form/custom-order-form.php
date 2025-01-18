@@ -19,10 +19,36 @@ function custom_order_form_init() {
 }
 add_action('plugins_loaded', 'custom_order_form_init');
 
-function custom_order_form_shortcode() {
+function custom_order_form_shortcode($atts = array()) {
+    // تحديد القيم الافتراضية للـ shortcode
+    $atts = shortcode_atts(array(
+        'product_id' => get_the_ID() // استخدام معرف المنتج الحالي كقيمة افتراضية
+    ), $atts);
+
+    // التحقق من وجود المنتج
+    $product = wc_get_product($atts['product_id']);
+    if (!$product) {
+        return '<p>المنتج غير موجود</p>';
+    }
+
     ob_start();
     custom_order_form_assets();
+    
+    // تخزين معرف المنتج الحالي
+    $current_product_id = get_the_ID();
+    // تعيين معرف المنتج المطلوب مؤقتاً
+    global $post;
+    $post = get_post($atts['product_id']);
+    setup_postdata($post);
+    
     add_custom_order_form();
+    
+    // إعادة تعيين المنتج الأصلي
+    if ($current_product_id) {
+        $post = get_post($current_product_id);
+        setup_postdata($post);
+    }
+    
     return ob_get_clean();
 }
 add_shortcode('custom-order-form', 'custom_order_form_shortcode');
